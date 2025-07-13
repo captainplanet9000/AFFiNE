@@ -22,7 +22,7 @@
     "affine": "r affine.ts",
     "af": "r affine.ts",
     "dev": "yarn affine dev",
-    "build": "yarn affine build",
+    "build": "node --import=./tools/cli/register.js ./tools/cli/src/affine.ts build",
     "start": "cd packages/backend/server && node dist/index.js",
     "lint:eslint": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" eslint --report-unused-disable-directives-severity=off . --cache",
     "lint:eslint:fix": "yarn lint:eslint --fix --fix-type problem,suggestion,layout",
