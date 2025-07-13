@@ -3,22 +3,20 @@ FROM node:20-slim AS base
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and yarn files for dependency installation
-COPY package.json yarn.lock .yarnrc.yml ./
-COPY .yarn ./.yarn
-
-# Install dependencies
-RUN yarn install --immutable
-
-# Copy the entire project
+# First copy the entire project so all workspace files are available
 COPY . .
 
-# Generate Prisma client
-RUN cd packages/backend/server && npx prisma generate
+# This is crucial for workspace resolution
+RUN yarn install
 
-# Build backend server using direct approach
-RUN cd tools/cli && yarn build && cd ../..
-RUN cd packages/backend/server && node ../../tools/cli/dist/cli.js bundle -p @affine/server
+# Set up the backend
+WORKDIR /app/packages/backend/server
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build the server directly with its own build command
+RUN yarn build
 
 # Production image
 FROM node:20-slim AS runner
