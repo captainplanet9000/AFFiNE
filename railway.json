@@ -1,7 +1,7 @@
 {
   "build": {
     "builder": "nixpacks",
-    "buildCommand": "yarn build"
+    "buildCommand": "chmod +x railway-build.sh && ./railway-build.sh"
   },
   "deploy": {
     "startCommand": "yarn start",
