@@ -1,42 +1,40 @@
 FROM node:20-slim AS base
 
-# Set working directory
-WORKDIR /app
+# Set working directory for backend server only
+WORKDIR /app/server
 
-# First copy the entire project so all workspace files are available
-COPY . .
+# Copy only the backend server package
+COPY packages/backend/server/package.json .
+COPY packages/backend/server/tsconfig.json .
+COPY packages/backend/server/src ./src
+COPY packages/backend/server/prisma ./prisma
 
-# Install dependencies
-RUN yarn install
+# Install dependencies for this package only
+RUN npm install
 
-# Build all packages first to ensure cross-dependencies are available
-RUN yarn build
-
-# Generate Prisma client in backend server
-WORKDIR /app/packages/backend/server
+# Generate Prisma client
 RUN npx prisma generate
 
-# Ensure node_modules are available in the backend server directory
-RUN mkdir -p /app/packages/backend/server/node_modules
-RUN cp -R /app/node_modules/* /app/packages/backend/server/node_modules/
+# Build using TypeScript directly
+RUN npx tsc
 
 # Production image
 FROM node:20-slim AS runner
 WORKDIR /app
 
-# Copy required files from builder - we'll copy more broadly to ensure all dependencies are available
-COPY --from=base /app/packages/backend/server/dist ./dist
-COPY --from=base /app/node_modules ./node_modules
-COPY --from=base /app/packages/backend/server/package.json ./package.json
-
-# Create prisma directory if it doesn't exist in the base image
-RUN mkdir -p ./prisma
-COPY --from=base /app/packages/backend/server/prisma/* ./prisma/ || true
+# Copy compiled files from build stage
+COPY --from=base /app/server/dist ./dist
+COPY --from=base /app/server/node_modules ./node_modules
+COPY --from=base /app/server/package.json ./package.json
+COPY --from=base /app/server/prisma ./prisma
 
 # Set environment variables
 ENV NODE_ENV=production
-# Skip native binaries check since we're running in a container
 ENV AFFINE_SKIP_NATIVE=true
+
+# Create required directories
+RUN mkdir -p ./prisma/migrations
+RUN mkdir -p ./dist/mails
 
 # Start the server
 CMD ["node", "dist/index.js"]
