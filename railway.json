@@ -1,10 +1,9 @@
 {
   "build": {
-    "builder": "nixpacks",
-    "buildCommand": "chmod +x railway-build.sh && ./railway-build.sh"
+    "builder": "DOCKERFILE",
+    "dockerfile": "./Dockerfile"
   },
   "deploy": {
-    "startCommand": "yarn start",
     "restartPolicyType": "ON_FAILURE"
   }
 }
